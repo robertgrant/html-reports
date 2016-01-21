@@ -60,15 +60,15 @@ html_unitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
   nexttableno<-tableno+1
   # write header row
   if(include_missing) {
-    write(paste0("<table><tr><th></th><th>n</th><th>% (N=",
+    write(paste0("<table><tr><th></th><th>n</th><th>% <br>(N=",
                  unitab_total,
-                 ")</th><th>% non-missing (N=",
+                 ")</th><th>% non-missing <br>(N=",
                  unitab_total_nonmissing,
                  ")</th></tr>"),
           file=handle,append=TRUE)
   }
   else {
-    write(paste0("<table><tr><th></th><th>n</th><th>% (N=",
+    write(paste0("<table><tr><th></th><th>n</th><th>% <br>(N=",
                  unitab_total,
                  ")</th></tr>"),
           file=handle,append=TRUE)
@@ -77,7 +77,7 @@ html_unitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
   # write each row
   if(include_missing) {
     for(i in 1:unitab_rows) {
-      if(names(unitab)[i]=="NA") {
+      if(is.na(names(unitab)[i])) {
         write(paste0("<tr><td>Missing",
                      "</td><td>",unitab[i],
                      "</td><td>",unitab_perc[i],"%",
@@ -133,12 +133,13 @@ html_multitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) 
   write("<table><tr><th></th><th>n</th><th>%</th></tr>",file=handle,append=TRUE)
   # write each row
   for(i in 1:(dim(x)[2])) {
-    write(paste0("<table><tr><th>",colnames(x)[i],
-                 "</th><th>",multitab_num[i]," / ",multitab_denom[i],
-                 "</th><th>",multitab_perc[i],"%</th></tr>"),
+    write(paste0("<tr><td>",colnames(x)[i],
+                 "</td><td>",multitab_num[i]," / ",multitab_denom[i],
+                 "</td><td>",multitab_perc[i],"%</td></tr>"),
           file=handle,append=TRUE)
   }
   write("</table>",file=handle,append=TRUE)
+  return(nexttableno)
 }
 
 
@@ -170,3 +171,32 @@ html_p<-function(text="",caption=FALSE,col="black",strong=FALSE,em=FALSE,handle=
   colstyle<-paste0(" style='color:",col,";' ")
   write(paste0("<p",colstyle,captionclass,">",strongtag,emtag,text,emend,strongend,"</p>"),file=handle)
 }
+
+html_anytab<-function(x,handle=con,caption="",tableno=1) {
+  # caption
+  write(paste0("<p class='caption'>Table ",tableno,": ",caption,"</p>"),file=handle,append=TRUE)
+  # increment table number
+  nexttableno<-tableno+1
+  # write header row
+  write("<table><tr><th></th>",file=handle,append=TRUE)
+  for(j in 1:(dim(x)[2])) {
+    write(paste0("<th>",colnames(x)[j],"</th>"),file=handle,append=TRUE)
+  }
+  write("</tr>",file=handle,append=TRUE)
+  # write each row
+  for(i in 1:(dim(x)[1])) {
+    write(paste0("<tr><td>",rownames(x)[i],"</td>"),file=handle,append=TRUE)
+    for(j in 1:(dim(x)[2])) {
+      write(paste0("<td>",x[i,j],"</td>"),file=handle,append=TRUE)
+    }
+    write("</tr",file=handle,append=TRUE)
+  }
+  write("</table>",file=handle,append=TRUE)
+  return(nexttableno)
+}
+
+# to be added:
+# unitab and multitab option to align numbers (centre as default)
+# write crosstab
+# write table of descriptive stats, given the data
+# return unitab and multitab tables as data frames

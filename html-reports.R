@@ -3,6 +3,7 @@ html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
   write("<!DOCTYPE html>",file=handle)
   write("<html>",file=handle)
   write("<head>",file=handle)
+  write("<meta name='description' content='R output written to HTML using the html-reports functions by Robert Grant (github.com/robertgrant/html-reports)'>")
   write(paste0("<title>",projecttitle,"</title>"),file=handle)
   write("<style>",file=handle)
   write("   body {",file=handle)
@@ -189,7 +190,7 @@ html_anytab<-function(x,handle=con,caption="",tableno=1) {
     for(j in 1:(dim(x)[2])) {
       write(paste0("<td>",x[i,j],"</td>"),file=handle,append=TRUE)
     }
-    write("</tr",file=handle,append=TRUE)
+    write("</tr>",file=handle,append=TRUE)
   }
   write("</table>",file=handle,append=TRUE)
   return(nexttableno)

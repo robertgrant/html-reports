@@ -153,7 +153,7 @@ html_img<-function(img_file,width=560,caption="",figureno=1,handle=con) {
   write(paste0("<p class='caption'>Figure ",figureno,": ",caption,"</p>"),file=handle,append=TRUE)
   write(paste0("<img src='",img_file,"' width='",width,"px'>"),file=handle)
   figureno<-figureno+1
-  return(figureno)
+  return(figureno)	
 }
 
 html_p<-function(text="",caption=FALSE,col="black",strong=FALSE,em=FALSE,handle=con) {

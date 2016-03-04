@@ -1,22 +1,34 @@
 /*
 	Stata commands for writing output to HTML reports
 	Robert Grant, 2015-16
-	robertgrantstats.co.uk
+	robertgrantstats.co.uk and github.com/robertgrant
+	This work is licensed under a Creative Commons Attribution 4.0 International License: 
+	creativecommons.org/licenses/by/4.0/
+*/
+
+/* To do:
+	all functions except start: include id option
+	unitab: Include row label for missing string values and a % non-missing column
+	multitab: % of responses (already there), % of all observations (to add)
+*/
+
+/* Notes:
+	If you really do want a blank html title, use projecttitle(" ") in html_start
+	We assume the file is already open, in line with the html-reports.R functions
+	It's up to the user to insert the </a> after starting blocking in html_p
 */
 
 // initiate HTML file to hold output
 capture program drop html_start
 program define html_start
-	syntax [, Handle(string) Projecttitle(string) No_h1]
+	syntax [, Handle(string) Projecttitle(string) No_h1 Blocking(string)]
 	// defaults
 	if "`handle'"=="" {
 		local handle "con"
 	}
 	if "`projecttitle'"=="" {
 		local projecttitle "My project"
-		// if you really do want a blank html title, use projecttitle(" ")
 	}
-	// we assume the file is already open, in line with the html-reports.R functions
 	//capture file close `handle'
 	//file open `handle' using "html/COTS-1-output.html", write text replace
 	file write `handle' "<!DOCTYPE html>" _n
@@ -56,7 +68,15 @@ program define html_start
 	file write `handle' _tab "}" _n
 	file write `handle' "</style>" _n
 	file write `handle' "</head>" _n _n
-	file write `handle' "<body>" _n
+	// if blocking is specified, assemble the HTML
+	if "`blocking'"!="" {
+		local blockcode `" onload=""' 
+		foreach i of local blocking {
+			local blockcode=`"`blockcode'blocking('`i''); "'
+		}
+		local blockcode=`"`blockcode'""'
+	}
+	file write `handle' `"<body`blockcode'>"' _n
 	if "`no_h1'"=="" {
 		file write `handle' "<h1>`projecttitle'</h1>" _n
 	}
@@ -64,8 +84,8 @@ end
 	
 	
 // this function makes a univariate frequency table in HTML
-capture program drop unitab
-program define unitab, rclass
+capture program drop html_unitab
+program define html_unitab, rclass
 	syntax varname [, CAPtion(string) Handle(string) Tableno(integer 1)]
 	// defaults
 	if "`handle'"=="" {
@@ -96,8 +116,8 @@ end
 
 /* this function makes a multivariate frequency table, with one row for
 	each binary 0/1-coded variable, in HTML */
-capture program drop multitab
-program define multitab, rclass
+capture program drop html_multitab
+program define html_multitab, rclass
 	syntax varlist [, CAPtion(string) Handle(string) Tableno(integer 1)]
 	// defaults
 	if "`handle'"=="" {
@@ -149,7 +169,7 @@ end
 // insert paragraph
 capture program drop html_p
 program define html_p
-	syntax , TEXT(string) [Caption COLor(string) Strong Em Handle(string)]
+	syntax , TEXT(string) [Caption COLor(string) Strong Em Handle(string) Blocking(string)]
 	// defaults
 	if "`handle'"=="" {
 		local handle "con"
@@ -169,9 +189,29 @@ program define html_p
 	if "`caption'"=="caption" {
 		local captionclass " class='caption' "
 	}
+	if "`blocking'"!="" {
+		local blockcode `"<a href='' onclick="blocking('`blocking''); return false;">"'
+		// you need to add </a> yourself...
+	}
 	local colstyle " style='color:`color';' "
-	file write `handle' "<p`colstyle'`captionclass'>`strongtag'`emtag'`text'`emend'`strongend'</p>" _n
+	#delimit ;
+	file write `handle' `"<p`colstyle'`captionclass'>`strongtag'`emtag'`blockcode'`text'
+						`emend'`strongend'</p>"' _n;
+	#delimit cr
 end
+
+
+
+// add </a> to end a block of show/hide content
+capture program drop html_blockend
+program define html_blockend
+	syntax [, Handle(string)]
+	if "`handle'"=="" {
+		local handle "con"
+	}
+	file write `handle' "</a>" _n
+end
+
 
 /*
 	to be added:

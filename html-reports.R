@@ -1,3 +1,18 @@
+# R functions for writing output to HTML reports
+# Robert Grant, 2015-16
+# robertgrantstats.co.uk and github.com/robertgrant
+# This work is licensed under a Creative Commons Attribution 4.0 International License: creativecommons.org/licenses/by/4.0/
+
+
+# to be added:
+# blocking in body tag (see Stata version)
+# id option for all functions except start
+# multitab % out of all observations
+# unitab and multitab option to align numbers (centre as default)
+# write crosstab
+# write table of descriptive stats, given the data
+# return unitab and multitab tables as data frames
+
 # HTML file start function
 html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
   write("<!DOCTYPE html>",file=handle)
@@ -196,8 +211,3 @@ html_anytab<-function(x,handle=con,caption="",tableno=1) {
   return(nexttableno)
 }
 
-# to be added:
-# unitab and multitab option to align numbers (centre as default)
-# write crosstab
-# write table of descriptive stats, given the data
-# return unitab and multitab tables as data frames

@@ -3,7 +3,7 @@ html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
   write("<!DOCTYPE html>",file=handle)
   write("<html>",file=handle)
   write("<head>",file=handle)
-  write("<meta name='description' content='R output written to HTML using the html-reports functions by Robert Grant (github.com/robertgrant/html-reports)'>")
+  write("<meta name='description' content='R output written to HTML using the html-reports functions by Robert Grant (github.com/robertgrant/html-reports)'>",file=handle)
   write(paste0("<title>",projecttitle,"</title>"),file=handle)
   write("<style>",file=handle)
   write("   body {",file=handle)
@@ -74,7 +74,7 @@ html_unitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
                  ")</th></tr>"),
           file=handle,append=TRUE)
   }
-  
+
   # write each row
   if(include_missing) {
     for(i in 1:unitab_rows) {

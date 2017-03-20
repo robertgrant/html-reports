@@ -1,5 +1,12 @@
+# R functions for writing output to HTML reports
+# Robert Grant, 2015-17
+# robertgrantstats.co.uk and github.com/robertgrant
+# This work is licensed under a Creative Commons Attribution 4.0 International License: creativecommons.org/licenses/by/4.0/
+
+
+
 # HTML file start function
-html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
+html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE,maxwidth=900) {
   write("<!DOCTYPE html>",file=handle)
   write("<html>",file=handle)
   write("<head>",file=handle)
@@ -7,7 +14,7 @@ html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
   write(paste0("<title>",projecttitle,"</title>"),file=handle)
   write("<style>",file=handle)
   write("   body {",file=handle)
-  write("      max-width: 900px;",file=handle)
+  write(paste0("      max-width: ",maxwidth,"px;"),file=handle)
   write("   }",file=handle)
   write("   h1, h2, h3, p, ol, ul {",file=handle)
   write("      font-family: 'Helvetica';",file=handle)
@@ -49,6 +56,7 @@ html_start<-function(projecttitle='My project',handle=con,auto_h1=TRUE) {
 html_unitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
   unitab_nonmissing<-table(x,useNA='no')
   unitab<-table(x,useNA='ifany')
+  names(unitab)[names(unitab)=='']<-'Blank'
   unitab_rows<-length(unitab)
   unitab_rows_nonmissing<-length(unitab_nonmissing)
   unitab_total<-sum(unitab)
@@ -119,7 +127,7 @@ html_unitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
 # this function makes a multivariate frequency table, with one row for
 # each binary 0/1-coded variable, in HTML
 # x is a data frame or matrix with sensible colnames
-html_multitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) {
+html_multitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE,uselabel=FALSE) {
   if(any(!(x==1 | x==0 | is.na(x)))) {
     warning('The data provided to html_multitab contains values other than NA, 0 and 1')
   }
@@ -130,11 +138,18 @@ html_multitab<-function(x,handle=con,caption="",tableno=1,include_missing=TRUE) 
   write(paste0("<p class='caption'>Table ",tableno,": ",caption,"</p>"),file=handle,append=TRUE)
   # increment table number
   nexttableno<-tableno+1
+  # make vector of variable names or labels
+  nameslabels<-colnames(x)
+  if(uselabel) {
+    for(i in 1:length(nameslabels)) {
+      nameslabels[i]<-attr(x[,i],'label')
+    }
+  }
   # write header row
   write("<table><tr><th></th><th>n</th><th>%</th></tr>",file=handle,append=TRUE)
   # write each row
   for(i in 1:(dim(x)[2])) {
-    write(paste0("<tr><td>",colnames(x)[i],
+    write(paste0("<tr><td>",nameslabels[i],
                  "</td><td>",multitab_num[i]," / ",multitab_denom[i],
                  "</td><td>",multitab_perc[i],"%</td></tr>"),
           file=handle,append=TRUE)
@@ -195,9 +210,3 @@ html_anytab<-function(x,handle=con,caption="",tableno=1) {
   write("</table>",file=handle,append=TRUE)
   return(nexttableno)
 }
-
-# to be added:
-# unitab and multitab option to align numbers (centre as default)
-# write crosstab
-# write table of descriptive stats, given the data
-# return unitab and multitab tables as data frames

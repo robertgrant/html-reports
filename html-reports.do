@@ -138,6 +138,23 @@ program define html_multitab, rclass
 end
 
 
+// this function makes a cross-tabulation
+capture program drop html_xtab
+program define html_xtab
+	syntax varlist(min=2 max=2), [Matrixname(string) Row Col Handle(string) Tableno(integer 1)]
+	if "`matrixname'"=="" {
+		local matrixname "mymat"
+	}
+	if "`row'"!="" & "`col'"!="" {
+		dis as error "Warning: you specified both row and column percentages but only one is permitted."
+		dis as error "Outputting row percentages..."
+	}
+	qui tab `varlist', matcell(`matrixname') matrow(`matrixname') matcol(`matrixname')
+	
+	
+end
+
+
 
 // insert heading text
 capture program drop html_h

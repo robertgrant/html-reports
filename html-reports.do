@@ -63,6 +63,7 @@ program define html_start
 	file write `handle' _tab _tab "padding-bottom: 5px;" _n
 	file write `handle' _tab _tab "font-family: 'Helvetica';" _n
 	file write `handle' _tab "}" _n
+	file write `handle' _tab _tab "table th.subhead { border-left: 1px solid #000; }" _n
 	file write `handle' _tab "tr:nth-child(even) {" _n
 	file write `handle' _tab _tab "background-color: #f2f2f2;" _n
 	file write `handle' _tab "}" _n
@@ -138,20 +139,168 @@ program define html_multitab, rclass
 end
 
 
+
 // this function makes a cross-tabulation
 capture program drop html_xtab
 program define html_xtab
-	syntax varlist(min=2 max=2), [Matrixname(string) Row Col Handle(string) Tableno(integer 1)]
+	syntax varlist(min=2 max=2) , [CAPtion(string) Matrixname(string) Row Col ///
+		Handle(string) Tableno(integer 1) ROWLABel(string) COLLABel(string) DP(integer 1) MISsing]
+	// defaults and checking
 	if "`matrixname'"=="" {
 		local matrixname "mymat"
+	}
+	if "`handle'"=="" {
+		local handle "con"
 	}
 	if "`row'"!="" & "`col'"!="" {
 		dis as error "Warning: you specified both row and column percentages but only one is permitted."
 		dis as error "Outputting row percentages..."
 	}
-	qui tab `varlist', matcell(`matrixname') matrow(`matrixname') matcol(`matrixname')
-	
-	
+	local dpround=10^`dp'
+	// put frequencies into matrix
+	qui tab `varlist' `if' `in', `missing' matcell(`matrixname') 
+	// get names of rows and columns of matrix as well as marginal totals
+	tokenize `varlist'
+	local rowvar "`1'"
+	local colvar "`2'"
+	preserve
+		tempname tempn
+		gen `tempn'=1
+		if "`in'"!="" {
+			keep `in'
+		}
+		if "`if'"!="" {
+			keep `if'
+		}
+		collapse (count) `tempn', by(`rowvar')
+		if "`missing'"!="missing" {
+			capture confirm var string `rowvar'
+			if _rc==0 {
+				drop if `rowvar'==.
+			}
+			else {
+				drop if `rowvar'==""
+			}
+		}
+		qui count
+		local nrownames=r(N)
+		forvalues i=1/`nrownames' {
+			local rowname`i' = `rowvar'[`i']
+			local rowtotal`i' = `tempn'[`i']
+		}
+	restore
+	preserve
+		tempname tempn2
+		gen `tempn2'=1
+		if "`in'"!="" {
+			keep `in'
+		}
+		if "`if'"!="" {
+			keep `if'
+		}
+		collapse (count) `tempn2', by(`colvar')
+		if "`missing'"!="missing" {
+			capture confirm var string `colvar'
+			if _rc==0 {
+				drop if `colvar'==.
+			}
+			else {
+				drop if `colvar'==""
+			}
+		}
+		qui count
+		local ncolnames=r(N)
+		forvalues i=1/`ncolnames' {
+			local colname`i' = `colvar'[`i']
+			local coltotal`i' = `tempn2'[`i']
+		}
+	restore
+	// get size of matrix
+	local nrowvals=rowsof(`matrixname')
+	local ncolvals=colsof(`matrixname')
+	local nrows=`nrowvals'+3
+	local ncols=`ncolvals'+3
+	// get variable labels if row/col label have not been specified
+	if "`rowlabel'"=="" {
+		local rowlabel: variable label `rowvar'
+	}
+	if "`collabel'"=="" {
+		local collabel: variable label `colvar'
+	}
+	// get percentages, if required
+	if "`row'"=="row" {
+		matrix percs = `matrixname'
+		forvalues i=1/`nrowvals' {
+			forvalues j=1/`ncolvals' {
+				matrix percs[`i',`j'] = round(100*(`matrixname'[`i',`j'])/(`rowtotal`i''), `dpround')
+			}
+		}
+	}
+	else if "`col'"=="col" {
+		matrix percs = `matrixname'
+		forvalues i=1/`nrowvals' {
+			forvalues j=1/`ncolvals' {
+				matrix percs[`i',`j'] = round(100*(`matrixname'[`i',`j'])/(`coltotal`i''), `dpround')
+			}
+		}
+	}
+	// start writing table
+	file write `handle' "<p class='caption'>Table `tableno': `caption'</p>" _n
+	local ++tableno
+	// write first row
+	file write `handle' "<table><tr><th></th><th></th><th colspan='`ncolvals''>`collabel'</th><th></th></tr>" _n
+	// write second row
+	file write `handle' "<tr><th></th><th></th>"
+	forvalues i=1/`ncolvals' {
+		file write `handle' "<th class='subhead'>`colname`i''</th>"
+	}
+	file write `handle' "<th class='subhead'>Total</th></tr>" _n
+	// write third row, including row label down first (merged cells) column
+	file write `handle' "<tr><th rowspan='`nrowvals''>`rowlabel'</th>"
+	file write `handle' "<th>`rowname1'</th>"
+	forvalues i=1/`ncolvals' {
+		local thiscount=`matrixname'[1,`i']
+		file write `handle' "<td>`thiscount'"
+		if "`row'"=="row" | "`col'"=="col" {
+			local thisperc=percs[1,`i']
+			file write `handle' "<br>`thisperc'&#37;"
+		}
+		file write `handle' "</td>"
+	}
+	file write `handle' "<th>`rowtotal1'"
+	if "`row'"=="row" {
+		file write `handle' "<br>100&#37;"
+	}
+	file write `handle' "</th></tr>" _n
+	// write subsequent rows
+	forvalues i=2/`nrowvals' {
+		file write `handle' "<tr><th>`rowname`i''</th>"
+		forvalues j=1/`ncolvals' {
+			local thiscount=`matrixname'[`i',`j']
+			file write `handle' "<td>`thiscount'"
+			if "`row'"=="row" | "`col'"=="col" {
+				local this perc=percs[`i',`j']
+				file write `handle' "<br>`thisperc'&#37;"
+			}
+			file write `handle' "</td>"
+		}
+		file write `handle' "<th>`rowtotal`i''"
+		if "`row'"=="row" {
+			file write `handle' "<br>100&#37;"
+		}
+		file write `handle' "</th></tr>" _n
+	}
+	// write final margin
+	file write `handle' "<tr><th></th><th>Total</th>"
+	forvalues j=1/`ncolvals' {
+		file write `handle' "<th>`coltotal`j''"
+		if "`col'"=="col" {
+			file write `handle' "<br>100&#37;"
+		}
+		file write `handle' "</th>"
+	}
+	file write `handle' "<th></th></tr>" _n
+	file write `handle' "</table>" _n _n
 end
 
 

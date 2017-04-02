@@ -1,6 +1,6 @@
 /*
 	Stata commands for writing output to HTML reports
-	Robert Grant, 2015-16
+	Robert Grant, 2015-17
 	robertgrantstats.co.uk and github.com/robertgrant
 	This work is licensed under a Creative Commons Attribution 4.0 International License: 
 	creativecommons.org/licenses/by/4.0/
@@ -10,6 +10,8 @@
 	all functions except start: include id option
 	unitab: Include row label for missing string values and a % non-missing column
 	multitab: % of responses (already there), % of all observations (to add)
+	unitab and multitab option to align numbers (centre as default)
+	write table of descriptive stats, given the data
 */
 
 /* Notes:
@@ -62,6 +64,7 @@ program define html_start
 	file write `handle' _tab _tab "padding-top: 5px;" _n
 	file write `handle' _tab _tab "padding-bottom: 5px;" _n
 	file write `handle' _tab _tab "font-family: 'Helvetica';" _n
+	file write `handle' _tab _tab "text-align: center;" _n
 	file write `handle' _tab "}" _n
 	file write `handle' _tab _tab "table th.subhead { border-left: 1px solid #000; }" _n
 	file write `handle' _tab "tr:nth-child(even) {" _n
@@ -156,7 +159,7 @@ program define html_xtab
 		dis as error "Warning: you specified both row and column percentages but only one is permitted."
 		dis as error "Outputting row percentages..."
 	}
-	local dpround=10^`dp'
+	local dpround=10^(-1*`dp')
 	// put frequencies into matrix
 	qui tab `varlist' `if' `in', `missing' matcell(`matrixname') 
 	// get names of rows and columns of matrix as well as marginal totals
@@ -240,7 +243,7 @@ program define html_xtab
 		matrix percs = `matrixname'
 		forvalues i=1/`nrowvals' {
 			forvalues j=1/`ncolvals' {
-				matrix percs[`i',`j'] = round(100*(`matrixname'[`i',`j'])/(`coltotal`i''), `dpround')
+				matrix percs[`i',`j'] = round(100*(`matrixname'[`i',`j'])/(`coltotal`j''), `dpround')
 			}
 		}
 	}
@@ -262,7 +265,7 @@ program define html_xtab
 		local thiscount=`matrixname'[1,`i']
 		file write `handle' "<td>`thiscount'"
 		if "`row'"=="row" | "`col'"=="col" {
-			local thisperc=percs[1,`i']
+			local thisperc : display %3.`dp'f percs[1,`i']
 			file write `handle' "<br>`thisperc'&#37;"
 		}
 		file write `handle' "</td>"
@@ -279,7 +282,7 @@ program define html_xtab
 			local thiscount=`matrixname'[`i',`j']
 			file write `handle' "<td>`thiscount'"
 			if "`row'"=="row" | "`col'"=="col" {
-				local this perc=percs[`i',`j']
+				local thisperc : display %3.`dp'f percs[`i',`j']
 				file write `handle' "<br>`thisperc'&#37;"
 			}
 			file write `handle' "</td>"
@@ -366,6 +369,30 @@ program define html_p
 	#delimit cr
 end
 
+// insert list
+capture program drop html_list
+program define html_list
+	syntax , TEXT(string) [Unordered Ordered Start End Handle(string)]
+	// defaults
+	if "`handle'"=="" {
+		local handle "con"
+	}
+	if "`start'"=="start" & "`unordered'"=="unordered" {
+		file write `handle' "<ul><li>`text'</li>" _n
+	}
+	else if "`start'"=="start" & "`ordered'"=="ordered" {
+		file write `handle' "<ol><li>`text'</li>" _n
+	}
+	else if "`start'"=="" & "`end'"=="" {
+		file write `handle' "<li>`text'</li>" _n
+	}
+	else if "`end'"=="end" & "`unordered'"=="unordered" {
+		file write `handle' "<li>`text'</li></ul>" _n
+	}
+	else if "`end'"=="end" & "`ordered'"=="ordered" {
+		file write `handle' "<li>`text'</li></ol>" _n
+	}
+end
 
 
 // add </a> to end a block of show/hide content
@@ -379,10 +406,4 @@ program define html_blockend
 end
 
 
-/*
-	to be added:
-	unitab and multitab option to align numbers (centre as default)
-	write crosstab
-	write table of descriptive stats, given the data
-	return unitab and multitab tables as data frames
-*/
+

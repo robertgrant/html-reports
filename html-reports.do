@@ -406,4 +406,13 @@ program define html_blockend
 end
 
 
+// end the HTML file (you still have to close the file connection)
+capture program drop html_end
+program define html_end
+	syntax [, Handle(string)]
+	if "`handle'"=="" {
+		local handle "con"
+	}
+	file write `handle' "</body></html>" _n
+end
 

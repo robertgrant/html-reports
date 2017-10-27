@@ -1,7 +1,7 @@
 # R functions for writing output to HTML reports
 # Robert Grant, 2015-17
 # robertgrantstats.co.uk and github.com/robertgrant
-# This work is licensed under a Creative Commons Attribution 4.0 International License: creativecommons.org/licenses/by/4.0/
+# This work is licensed under The Unlicense, and unlicensed under The License.
 
 
 

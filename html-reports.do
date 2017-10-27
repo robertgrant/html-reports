@@ -2,8 +2,7 @@
 	Stata commands for writing output to HTML reports
 	Robert Grant, 2015-17
 	robertgrantstats.co.uk and github.com/robertgrant
-	This work is licensed under a Creative Commons Attribution 4.0 International License: 
-	creativecommons.org/licenses/by/4.0/
+	This work is licensed under The Unlicense, and unlicensed under The License.
 */
 
 /* To do:
@@ -74,7 +73,7 @@ program define html_start
 	file write `handle' "</head>" _n _n
 	// if blocking is specified, assemble the HTML
 	if "`blocking'"!="" {
-		local blockcode `" onload=""' 
+		local blockcode `" onload=""'
 		foreach i of local blocking {
 			local blockcode=`"`blockcode'blocking('`i''); "'
 		}
@@ -85,8 +84,8 @@ program define html_start
 		file write `handle' "<h1>`projecttitle'</h1>" _n
 	}
 end
-	
-	
+
+
 // this function makes a univariate frequency table in HTML
 capture program drop html_unitab
 program define html_unitab, rclass
@@ -161,7 +160,7 @@ program define html_xtab
 	}
 	local dpround=10^(-1*`dp')
 	// put frequencies into matrix
-	qui tab `varlist' `if' `in', `missing' matcell(`matrixname') 
+	qui tab `varlist' `if' `in', `missing' matcell(`matrixname')
 	// get names of rows and columns of matrix as well as marginal totals
 	tokenize `varlist'
 	local rowvar "`1'"
@@ -415,4 +414,3 @@ program define html_end
 	}
 	file write `handle' "</body></html>" _n
 end
-

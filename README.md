@@ -44,7 +44,7 @@ A: Good. Edit the code to get X. You can keep it, share it, pretend that you wro
 
 You should open the file connection first, probably like this: `file open con using "myoutput.html", write text replace`. Notice that I call the file handle `con`. This is fairly common, and it's the default for all the commands that follow, so calling it con at the beginning means never having to specify it afterwards.
 
-**html_start** writes out all the header HTML and CSS you need. Remember that the look you get can be tweaked by changing html-reports.do to the CSS of your liking. You probably want to specify the option `projecttitle(string)` or `no_h1`, otherwise you'll get a <h1> heading at the top with the default name "My Project", which will look a bit silly, even if it is your project.
+**html_start** writes out all the header HTML and CSS you need. Remember that the look you get can be tweaked by changing html-reports.do to the CSS of your liking. You probably want to specify the option `projecttitle(string)` or `no_h1`, otherwise you'll get a h1 heading at the top with the default name "My Project", which will look a bit silly, even if it is your project.
 
 **html_unitab myvar** makes a univariate frequency table of myvar. There is an option `tableno(integer)`, which is 1 by default. This is used in all the table-writing commands. I suggest you create a macro at the outset for your table numbering: `global tabn 1`, then include it like this so it increments:
     html_unitab myvar, tableno($tabn)

@@ -54,7 +54,7 @@ You should open the file connection first, probably like this: `file open con us
 
 **html_xtab** makes a crosstab. This is a hell of a lot harder than it seems at first.
 
-**html_h, text("Check this out!") level(2)** will insert a heading in HTML (<h2> in this case, because of the level option).
+**html_h, text("Check this out!") level(2)** will insert a heading in HTML (h2 in this case, because of the level option).
 
 **html_img, img_file(mygraph.png) figureno($fign) caption("Data can be seen to be on the left and the right")** will insert an image file with the desired caption. Note the figureno() option which mirrors the tableno one.
 

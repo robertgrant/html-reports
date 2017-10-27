@@ -2,7 +2,7 @@
 
 This project is released under The Unlicense. You can do whatever you want with it.
 
-##R functions
+## R functions
 
 **html_start** writes head information including CSS (of my own choosing, but basically who doesn't like clean simple Helvetica and look-alikes). The Boolean argument *auto_h1* determines whether or not a header is written at the top of the visible content containing the *projecttitle*.
 
